@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор брошюр</title>
+    <script src="https://misc.gv-integration.ru/calc/lib/html2canvas.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        #calculator {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow-x: hidden;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .header h1 {
+            color: #333;
+            margin: 0;
+            flex-grow: 1;
+            text-align: center;
+            font-size: 24px;
+        }
+        .header img {
+            width: 150px;
+            height: 55px;
+            object-fit: contain;
+        }
+        .back-button {
+            background: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 400;
+            font-size: 14px;
+            transition: background 0.3s;
+            white-space: nowrap;
+            display: inline-block;
+            vertical-align: middle;
+            border: none;
+            cursor: pointer;
+        }
+        .back-button:hover {
+            background: #45a049;
+        }
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        @media (max-width: 768px) {
+            #calculator {
+                padding: 15px;
+                margin: 10px;
+            }
+            .calculator-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+            .header img {
+                display: none;
+            }
+            .input-section, .output-section {
+                padding: 15px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .button-group {
+                flex-direction: column;
+            }
+            .button-group button {
+                width: 100%;
+            }
+            .delivery-discount-group {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .urgency-group {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .urgency-options {
+                flex-wrap: wrap;
+            }
+            .row-fields {
+                flex-direction: column;
+            }
+            .color-layout-group {
+                flex-direction: column;
+            }
+            .material-density-group {
+                flex-direction: column;
+            }
+            .lamination-cutting-group {
+                flex-direction: column;
+            }
+        }
+        .input-section, .output-section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        input[type="number"], input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .row-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .custom-size-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .custom-size-group.hidden {
+            display: none;
+        }
+        .fit-info {
+            background: #e8f5e9;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #2e7d32;
+        }
+        .custom-size-error {
+            color: #c62828;
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .print-type {
+            display: flex;
+            gap: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+        }
+        .print-type label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: normal;
+            margin-bottom: 0;
+        }
+        .color-layout-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+            flex-wrap: wrap;
+        }
+        .radio-group label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: normal;
+            margin-bottom: 0;
+        }
+        .material-density-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .density-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+        }
+        .density-options label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: normal;
+            margin-bottom: 0;
+        }
+        .lamination-cutting-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .postpress-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: end;
+        }
+        .postpress-group .form-field {
+            display: flex;
+            flex-direction: column;
+        }
+        .postpress-group label {
+            font-size: 13px;
+            white-space: nowrap;
+            margin-bottom: 5px;
+        }
+        .delivery-discount-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .urgency-group {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            background: white;
+            flex-wrap: wrap;
+        }
+        .urgency-group label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: normal;
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+        .urgency-group input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            cursor: pointer;
+        }
+        .urgency-options {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .button-group button {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        #saveLocalBtn {
+            background: #4CAF50;
+            color: white;
+        }
+        #saveLocalBtn:hover {
+            background: #45a049;
+        }
+        #addProductBtn {
+            background: #FF9800;
+            color: white;
+        }
+        #addProductBtn:hover {
+            background: #F57C00;
+        }
+        .loading { text-align: center; padding: 20px; }
+        .results { margin-top: 20px; }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .total {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #333;
+            border-bottom: none;
+        }
+        .per-piece {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid #eee;
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1em;
+        }
+        .details { margin-top: 15px; font-size: 0.9em; color: #666; line-height: 1.5; }
+        .error { background: #ffebee; color: #c62828; padding: 10px; border-radius: 5px; margin-top: 20px; }
+        .last-update { text-align: center; margin-top: 20px; color: #777; }
+        .minimum-cost-message {
+            margin-top: 10px;
+            padding: 8px;
+            background: #fff3e0;
+            border-radius: 5px;
+            border-left: 4px solid #ff9800;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+        }
+        .minimum-cost-message span:first-child {
+            color: #e65100;
+        }
+        .minimum-cost-message span:last-child {
+            font-weight: bold;
+            color: #e65100;
+        }
+        .discount-label {
+            font-size: 12px;
+            color: #999;
+            font-weight: normal;
+        }
+        .hidden {
+            display: none;
+        }
+        .order-weight {
+            font-size: 0.9em;
+            color: #666;
+            line-height: 1.5;
+            margin-top: 15px;
+            padding: 10px;
+            background: #e8f5e8;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .order-weight span:last-child {
+            color: #2e7d32;
+        }
+        .section-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0 15px 0;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div id="calculator">
+        <div class="header">
+            <a href="#" id="backButton" class="back-button">← назад</a>
+            <h1>Калькулятор брошюр</h1>
+            <img src="../../logo_new_rgb75.png" alt="Логотип">
+        </div>
+        <div class="calculator-grid">
+            <div class="input-section">
+                <!-- Тираж и Формат -->
+                <div class="row-fields">
+                    <div>
+                        <label for="circulationInput">Тираж</label>
+                        <input type="number" id="circulationInput" min="1" max="100000" value="100">
+                    </div>
+                    <div>
+                        <label for="formatSelect">Формат изделия</label>
+                        <select id="formatSelect">
+                            <option value="">Загрузка...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Пользовательский формат -->
+                <div id="customSizeGroup" class="custom-size-group hidden">
+                    <div>
+                        <label for="customWidth">Длина (мм)</label>
+                        <input type="number" id="customWidth" min="1" max="1000" value="148">
+                    </div>
+                    <div>
+                        <label for="customHeight">Ширина (мм)</label>
+                        <input type="number" id="customHeight" min="1" max="1000" value="210">
+                    </div>
+                </div>
+
+                <!-- Количество полос -->
+                <div class="form-group">
+                    <label for="pageCountSelect">Количество полос</label>
+                    <select id="pageCountSelect">
+                        <option value="4">4 полосы</option>
+                        <option value="8" selected>8 полос</option>
+                        <option value="12">12 полос</option>
+                        <option value="16">16 полос</option>
+                        <option value="24">24 полосы</option>
+                        <option value="32">32 полосы</option>
+                        <option value="48">48 полос</option>
+                        <option value="64">64 полосы</option>
+                    </select>
+                </div>
+
+                <h3 class="section-title">Обложка</h3>
+
+                <!-- Материал и плотность обложки -->
+                <div class="material-density-group">
+                    <div class="material-select">
+                        <label for="coverMaterialSelect">Материал обложки</label>
+                        <select id="coverMaterialSelect">
+                            <option value="">Загрузка...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Плотность (г/м2)</label>
+                        <div id="coverDensityContainer" class="density-options">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Печать обложки -->
+                <div class="form-group">
+                    <label>Печать обложки</label>
+                    <div class="print-type">
+                        <label>
+                            <input type="radio" name="colorModeCover" value="40" checked>
+                            Односторонняя (4+0)
+                        </label>
+                        <label>
+                            <input type="radio" name="colorModeCover" value="44">
+                            Двусторонняя (4+4)
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Ламинация -->
+                <div class="form-group">
+                    <label for="laminationSelect">Ламинация обложки</label>
+                    <select id="laminationSelect">
+                        <option value="">Загрузка...</option>
+                    </select>
+                </div>
+
+                <h3 class="section-title">Внутренний блок</h3>
+
+                <!-- Материал и плотность блока -->
+                <div class="material-density-group">
+                    <div class="material-select">
+                        <label for="blockMaterialSelect">Материал блока</label>
+                        <select id="blockMaterialSelect">
+                            <option value="">Загрузка...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Плотность (г/м2)</label>
+                        <div id="blockDensityContainer" class="density-options">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Печать блока -->
+                <div class="form-group">
+                    <label>Печать блока</label>
+                    <div class="print-type">
+                        <label>
+                            <input type="radio" name="colorModeBlock" value="40" checked>
+                            Односторонняя (4+0)
+                        </label>
+                        <label>
+                            <input type="radio" name="colorModeBlock" value="44">
+                            Двусторонняя (4+4)
+                        </label>
+                    </div>
+                </div>
+
+                <h3 class="section-title">Переплёт</h3>
+
+                <!-- Вид переплета -->
+                <div class="form-group">
+                    <label for="bindingSelect">Вид переплета</label>
+                    <select id="bindingSelect">
+                        <option value="">Загрузка...</option>
+                    </select>
+                </div>
+
+                <!-- Подбор цвета и Макеты -->
+                <div class="color-layout-group">
+                    <div>
+                        <label>Подбор цвета:</label>
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" name="colorMatching" value="no" checked>
+                                нет
+                            </label>
+                            <label>
+                                <input type="radio" name="colorMatching" value="yes">
+                                да
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="layoutsCount">Кол-во макетов:</label>
+                        <input type="number" id="layoutsCount" min="1" value="1" step="1">
+                    </div>
+                </div>
+
+                <!-- Срочность -->
+                <div class="form-group">
+                    <label>Срочность</label>
+                    <div class="urgency-group">
+                        <div class="urgency-options">
+                            <label>
+                                <input type="radio" name="urgency" value="none" checked>
+                                нет
+                            </label>
+                            <label>
+                                <input type="radio" name="urgency" value="24h">
+                                24 часа
+                            </label>
+                            <label>
+                                <input type="radio" name="urgency" value="12h">
+                                12 часов
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Доставка и Скидка -->
+                <div class="delivery-discount-group">
+                    <div>
+                        <label for="deliveryInput">Доставка (руб)</label>
+                        <input type="number" id="deliveryInput" min="0" value="0" step="1">
+                    </div>
+                    <div>
+                        <label for="discountInput">Скидка <span class="discount-label">(от 0 до 10%)</span></label>
+                        <input type="number" id="discountInput" min="0" max="10" value="0" step="1">
+                    </div>
+                </div>
+
+                <!-- Группа кнопок -->
+                <div class="button-group">
+                    <button id="saveLocalBtn">Сохранить скрин на ПК</button>
+                    <button id="addProductBtn">Добавить товар в Б24</button>
+                </div>
+            </div>
+
+            <!-- Правая колонка - результаты -->
+            <div class="output-section">
+                <div id="loading" class="loading">Загрузка данных...</div>
+                <div id="results" style="display: none;">
+                    <h3>Результаты расчета</h3>
+                    <div class="result-item">
+                        <span>Стоимость печати обложки:</span>
+                        <span id="coverPrintCost">0 руб.</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Стоимость материала обложки:</span>
+                        <span id="coverMaterialCost">0 руб.</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Ламинация обложки:</span>
+                        <span id="coverLaminationCost">0 руб.</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Стоимость печати блока:</span>
+                        <span id="blockPrintCost">0 руб.</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Стоимость материала блока:</span>
+                        <span id="blockMaterialCost">0 руб.</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Фальцовка:</span>
+                        <span id="foldingCost">0 руб.</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Переплёт:</span>
+                        <span id="bindingCost">0 руб.</span>
+                    </div>
+                    <div class="result-item" id="colorMatchingRow" style="display: none;">
+                        <span>Подбор цвета:</span>
+                        <span id="colorMatchingCost">0 руб.</span>
+                    </div>
+                    <div class="result-item" id="layoutsRow" style="display: none;">
+                        <span>Доплата за макеты:</span>
+                        <span id="layoutsCost">0 руб.</span>
+                    </div>
+                    <div class="result-item" id="urgencyRow" style="display: none;">
+                        <span>Срочность:</span>
+                        <span id="urgencyCost">0 руб.</span>
+                    </div>
+                    <div class="result-item" id="discountRow" style="display: none;">
+                        <span>Скидка:</span>
+                        <span id="discountAmount">0 руб.</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Доставка:</span>
+                        <span id="deliveryCost">0 руб.</span>
+                    </div>
+                    <div class="result-item total">
+                        <span>Итого:</span>
+                        <span id="totalEl">0 руб.</span>
+                    </div>
+                    <div class="per-piece">
+                        <span class="label">Стоимость за 1 шт.:</span>
+                        <span class="value" id="perPieceEl">0.00 руб.</span>
+                    </div>
+                    <div id="minimumCostMessage" class="minimum-cost-message" style="display: none;">
+                        <span>Минимальная стоимость печати:</span>
+                        <span id="minimumCostValue">0 руб.</span>
+                    </div>
+                    <div class="details" id="details"></div>
+                    <div class="order-weight" id="orderWeight">
+                        <span>Вес заказа:</span>
+                        <span id="weightValue">0 г</span>
+                    </div>
+                </div>
+                <div id="error" class="error" style="display: none;">
+                    Произошла ошибка при загрузке данных
+                </div>
+            </div>
+        </div>
+        <div class="last-update">
+            <p id="lastUpdate">Данные обновлены: -</p>
+        </div>
+    </div>
+    <script type="module" src="data.js"></script>
+    <script type="module" src="calc.js"></script>
+    <script type="module" src="ui.js"></script>
+    <script>
+        (function() {
+            function restrictDiscountInput() {
+                const discountInput = document.getElementById('discountInput');
+                if (discountInput) {
+                    discountInput.addEventListener('input', function(e) {
+                        let value = parseFloat(this.value);
+                        if (isNaN(value)) { this.value = 0; return; }
+                        if (value > 10) { this.value = 10; }
+                        if (value < 0) { this.value = 0; }
+                    });
+                }
+            }
+            function sendHeightToParent() {
+                if (window.self !== window.top && typeof BX24 !== 'undefined') {
+                    try {
+                        const body = document.body;
+                        const html = document.documentElement;
+                        const height = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
+                        const targetHeight = height + 20;
+                        BX24.resizeWindow(window.innerWidth, targetHeight);
+                        document.body.style.minHeight = targetHeight + 'px';
+                        document.documentElement.style.minHeight = targetHeight + 'px';
+                    } catch (e) {}
+                }
+            }
+            function forceSetHeight() {
+                if (window.self !== window.top && typeof BX24 !== 'undefined') {
+                    try {
+                        BX24.resizeWindow(window.innerWidth, 2000);
+                        setTimeout(sendHeightToParent, 100);
+                        setTimeout(sendHeightToParent, 300);
+                        setTimeout(sendHeightToParent, 500);
+                        setTimeout(sendHeightToParent, 1000);
+                        setTimeout(sendHeightToParent, 2000);
+                    } catch (e) {}
+                }
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    restrictDiscountInput();
+                    forceSetHeight();
+                });
+            } else {
+                restrictDiscountInput();
+                forceSetHeight();
+            }
+            window.addEventListener('load', function() {
+                setTimeout(forceSetHeight, 100);
+                setTimeout(forceSetHeight, 500);
+                restrictDiscountInput();
+            });
+            const observer = new MutationObserver(function() {
+                setTimeout(sendHeightToParent, 50);
+            });
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                characterData: true
+            });
+            ['click', 'input', 'change', 'resize'].forEach(event => {
+                document.addEventListener(event, function() {
+                    setTimeout(sendHeightToParent, 100);
+                });
+            });
+            setInterval(sendHeightToParent, 2000);
+        })();
+    </script>
+</body>
+</html>
